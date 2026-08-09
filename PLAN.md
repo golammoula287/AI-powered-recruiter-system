@@ -1,7 +1,7 @@
 # AI-Powered Recruiter System — Implementation Plan
 
 > Author: Easin (golammoula287) · Date: 15/07/26
-> Tech stack: **MERN** (MongoDB, Express, React) + **Next.js** + AI (OpenAI)
+> Tech stack: **MERN** (MongoDB, Express, React) + **Next.js** + AI (Groq — free tier)
 
 This document is the working blueprint for building the recruiter system described in
 the project proposal. It covers the architecture, data model, API surface, AI
@@ -52,8 +52,8 @@ Three-tier monorepo:
 └───┬──────────────┬──────────────┬───────────┘
     │              │              │
 ┌───▼────┐   ┌─────▼─────┐  ┌─────▼──────────┐
-│ MongoDB │   │ OpenAI API│  │ SMTP (nodemailer)
-│ (Mongoose)│ │ (GPT)     │  │ email services  │
+│ MongoDB │   │ Groq API  │  │ SMTP (nodemailer)
+│ (Mongoose)│ │ (LLM/LPU) │  │ email services  │
 └────────┘   └───────────┘  └────────────────┘
 ```
 
@@ -169,10 +169,24 @@ Three-tier monorepo:
 
 ---
 
-## 6. AI Integration (OpenAI)
+## 6. AI Integration (Groq — free tier)
+
+**Why Groq:** OpenAI is paid. Groq offers a **free tier with no credit card** and runs
+open-weight LLMs (Llama, Qwen, etc.) on fast LPU hardware. Its API is **OpenAI-compatible**,
+so we use the standard `openai` npm package and just point it at Groq's base URL and key —
+implementation is a near drop-in replacement.
+
+| Groq setting | Value |
+|--------------|-------|
+| Base URL | `https://api.groq.com/openai/v1` |
+| Model | `llama-3.3-70b-versatile` (free, popular default) |
+| Auth | `GROQ_API_KEY` (Bearer token, no card required) |
+| Free-tier limits | ~30 RPM / 1K–14.4K RPD depending on model — fine for dev; add retries on `429` |
 
 A dedicated service module (`services/aiService.js`) wraps all model calls. Each
-function is deterministic in input/output shape so it's easy to test and swap.
+function is deterministic in input/output shape so it's easy to test and swap. The
+only place that depends on the model is one config file — if a model is ever rotated
+out, we just change `GROQ_MODEL`.
 
 | Function | Input | Output | Prompt strategy |
 |----------|-------|--------|-----------------|
@@ -182,6 +196,7 @@ function is deterministic in input/output shape so it's easy to test and swap.
 
 - Requests ask for **strict JSON** output to keep parsing reliable.
 - Errors are caught and surfaced as clear messages ("AI service unavailable").
+- Rate-limit (`429`) responses trigger a short backoff retry before giving up.
 - Raw PDF text is extracted with `pdf-parse` before being sent to the model.
 
 ---
@@ -222,7 +237,7 @@ Nodemailer sends branded emails from a template service (`services/emailService.
 - Passwords hashed with **bcrypt**.
 - **JWT** (signed, short expiry) for sessions; role embedded in the token.
 - Middleware: `requireAuth` (any logged-in user) and `requireAdmin` (admin only).
-- API keys for OpenAI live only in `.env` / server env.
+- API keys for Groq live only in `.env` / server env.
 - Route guards on the frontend redirect unauthenticated users to `/login`.
 - File uploads validated by type/size/page-count; stored outside public web root.
 
@@ -345,8 +360,10 @@ MONGODB_URI=mongodb://localhost:27017/recruiter
 JWT_SECRET=change_me
 JWT_EXPIRES_IN=7d
 
-# AI
-OPENAI_API_KEY=sk-...
+# AI (Groq — free tier, no credit card)
+GROQ_API_KEY=gsk_...
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_MODEL=llama-3.3-70b-versatile
 
 # SMTP
 SMTP_HOST=smtp.example.com
