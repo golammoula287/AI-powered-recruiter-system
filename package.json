@@ -1,0 +1,46 @@
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed:jobs": "node --env-file=.env scripts/seedJobs.js",
+    "lint": "eslint",
+    "drizzle:generate": "drizzle-kit generate",
+    "drizzle:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@edgestore/react": "^0.7.0",
+    "@edgestore/server": "^0.7.0",
+    "@langchain/core": "^1.2.3",
+    "@langchain/groq": "^1.3.1",
+    "@neondatabase/serverless": "^1.1.0",
+    "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "framer-motion": "^12.42.2",
+    "jsonwebtoken": "^9.0.3",
+    "langchain": "^1.5.3",
+    "lucide-react": "^1.24.0",
+    "next": "16.2.10",
+    "nodemailer": "^9.0.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-dropzone": "^19.1.1",
+    "react-hook-form": "^7.81.0",
+    "react-hot-toast": "^2.6.0",
+    "unpdf": "^1.6.2",
+    "ws": "^8.21.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "drizzle-kit": "^1.0.0-rc.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "tailwindcss": "^4"
+  }
+}
